@@ -1,4 +1,3 @@
-
 package tree2;
 
 import java.awt.*;
@@ -12,6 +11,7 @@ import javax.swing.JTextField;
  *
  * @author Luke
  */
+// Each instance of TreeComponent will be populated with seven nodes.
 public class TreeComponent extends JComponent
 {   
     TreeNode root;
@@ -25,6 +25,12 @@ public class TreeComponent extends JComponent
     TreeNode node;
     TreeNode parent;
     TreeNode child;
+//  Each node will have a left child, right child, parent, data, and an AVL
+//  integer value, which denotes the difference of balance between the left
+//  and right sides of the node. A negative AVL value means the node is off 
+//  balanced in favor of the left side, while a positive one, the right side.
+//  Keeping track of these AVL values is essential to a functioning AVL binary
+//  search tree.
     private class TreeNode {
         TreeNode left;
         int data;
@@ -86,6 +92,7 @@ public class TreeComponent extends JComponent
         userPanel.add(printButton);
         add(userPanel,BorderLayout.SOUTH);
     }
+//  Method prints two values of each node. (data, AVL)
     public void printAll(TreeNode currentNode){
         if(currentNode!=null){
             printAll(currentNode.left);
@@ -93,6 +100,9 @@ public class TreeComponent extends JComponent
             printAll(currentNode.right);
         }
     }
+//  addNode() inserts a new node at the appropriate spot in the binary search 
+//  tree. If the input is a repeated value, this function does nothing.
+//  After adding the node, the avlIterator() function is called.
     public void addNode(int data, TreeNode currentNode){
         if(data == currentNode.data) return;
         if(data < currentNode.data){
@@ -112,14 +122,19 @@ public class TreeComponent extends JComponent
             }else addNode(data,currentNode.right);
         }
     }
+//  avlIterator() iterates through all of the parent nodes affected by the added
+//  node and updates the value of each affected AVL integer value. After all
+//  necessary updates are made, avlChecker() is called.
     public void avlIterator(TreeNode node,TreeNode originalParent){
         parent = node.parent;
         if(parent==null){
             avlChecker(originalParent);
             return;
         }
-        if(node.AVL==0) return;
-        else{
+        if(node.AVL==0){
+            avlChecker(originalParent);
+            return;
+        }else{
             if(parent.left==node){
                 parent.AVL--;
                 avlIterator(parent,originalParent);
@@ -129,6 +144,9 @@ public class TreeComponent extends JComponent
             }
         }
     }
+//  avlChecker() checks if any of the parent nodes of the added node is greater
+//  than 1 or less than -1, which denotes an unbalanced tree. If the tree is
+//  unbalanced, avlDecider() is called.
     public void avlChecker(TreeNode node){
         parent = node.parent;
         if(parent==null)return;
@@ -136,6 +154,9 @@ public class TreeComponent extends JComponent
         else if(parent.AVL>1) avlDecider(parent);
         else avlChecker(parent);
     }
+//  avlDecider() checks if a double rotation or a single rotation is needed, in
+//  order to rebalance the tree. This function calls one of four functions:
+//  single or double left rotations or single or double right rotations.
     public void avlDecider(TreeNode node){
         if(node.AVL==-2){
             if(node.left.AVL>0) avlDLeft(node.left);
@@ -145,6 +166,8 @@ public class TreeComponent extends JComponent
             else avlRight(node);
         }
     }
+//  avlLeft() is called when a single left rotation is needed for rebalancing.
+//  It then executes the rotation.
     public void avlLeft(TreeNode node){
         child = node.left;
         parent = node.parent;
@@ -164,6 +187,9 @@ public class TreeComponent extends JComponent
         node.AVL = 0;
         avlUpdater(child);
     }
+//  avlDLeft() is called when a double left rotation is needed for rebalancing.
+//  It then executes the first rotation of the double rotation, and then proceeds
+//  to call avlLeft() for the second rotation.
     public void avlDLeft(TreeNode node){
         parent = node.parent;
         child = node.right;
@@ -179,6 +205,8 @@ public class TreeComponent extends JComponent
         child.AVL = -1;
         avlLeft(parent);
     }
+//  avlRight() is called when a single right rotation is needed for rebalancing.
+//  It then executes the rotation.
     public void avlRight(TreeNode node) {
         child = node.right;
         parent = node.parent;
@@ -198,6 +226,9 @@ public class TreeComponent extends JComponent
         child.AVL = 0;
         avlUpdater(child);
     }
+//  avlDRight() is called when a double right rotation is needed for rebalancing.
+//  It then executes the first rotation of the double rotation, and then proceeds
+//  to call avlRight() for the second rotation.
     public void avlDRight(TreeNode node){
         child = node.left;
         parent = node.parent;
@@ -214,6 +245,8 @@ public class TreeComponent extends JComponent
         
         avlRight(parent);
     }
+//  avlUpdater() is called after a rebalancing. It updates the affected AVL
+//  integer values.
     public void avlUpdater(TreeNode node){
         parent = node.parent;
         if(parent==null)return;
@@ -227,6 +260,8 @@ public class TreeComponent extends JComponent
             else avlUpdater(parent);
         }
     }
+//  When the root needs to be changed in order to balance the tree, changeRoot()
+//  is called.
     public void changeRoot(TreeNode root){
         if(root.AVL<0){
             node = root.left;
@@ -252,7 +287,9 @@ public class TreeComponent extends JComponent
             node.AVL = 0;
         }
     }
-    
+//  Admittedly, this part is a bit messy. When the root is changed for
+//  rebalancing purposes, the global root of TreeComponent doesn't get updated.
+//  These two functions are called to get the correct root.
     public void getRoot(TreeNode node){
         parent = node.parent;
         if(node.parent==null) printAll(node);
